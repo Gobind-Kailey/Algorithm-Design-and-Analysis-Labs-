@@ -33,7 +33,7 @@ public class ModelCode_CardGame {
         {0, 1, 2, 3, 7}
         ...
         {0, 1, 2, 3, 24}
-        {0, 1, 2, 5, 5}
+        {0, 1, 2, 4, 5}
         */
 
         myMaxHeap = new HandsMaxHeap(54000); // space just has to be greater than (25 C 5)

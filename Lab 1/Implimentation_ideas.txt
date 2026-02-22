@@ -1,0 +1,27 @@
+    /*
+        1. Traverse through the binary string
+        2. If the path does not exist then create the path by adding
+            internal nodes until the end is reached and assign the leaf
+            also known as the last value/symbol to binary. otherwise
+            set the symbol value to null at each of the nodes. 
+            
+            If the path already exists then keep following down the path 
+            until the end is reached. 
+
+            Regardless of the path existing or not, we need to add the 
+            final symbol = binary with the ci string name.
+
+        3. As I am traversing through this string I also need to check 
+            two cases: 
+            1. Check if the prefix of something already exists, by checking 
+            if there is something bigger that comes after a specific value. 
+
+            For example : suppose we have 001 already built and now we are looking
+            at 00, we will see that this already exists and the path is longer 
+            than 00 and it goes to the right again with the 1. 
+
+            2. The other case that could happen is the value is bigger, in that case
+            we would just keep traversing and check if the value at the ends. 
+
+
+        */ 

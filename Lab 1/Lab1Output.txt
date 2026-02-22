@@ -1,0 +1,98 @@
+------------------Testing Constructor 1--------------
+Expected Output: "I num=0"
+I num=0
+
+------------------Testing method insertCodeword--------------
+
+------------------Test 1. Valid Input--------------
+Expected Output: "I c0 I num=1"
+I c0 I num=1
+
+------------------Testing method insertCodeword--------------
+
+------------------Test 2. Valid Input--------------
+Expected Output: "I c1 I I c0 I num=2"
+I c1 I I c0 I num=2
+
+------------------Testing method insertCodeword--------------
+
+------------------Test 3. Invalid Input. Duplicate codeword already in the tree--------------
+Expected Output: "Prefix condition violated!"
+Prefix condition violated!
+
+------------------Testing method insertCodeword--------------
+
+------------------Test 4. Invalid Input. A strict sufffix already in the tree--------------
+Expected Output: "Prefix condition violated!"
+Prefix condition violated!
+
+------------------Testing method insertCodeword--------------
+
+------------------Test 5. Invalid Input. A strict prefix already in the tree--------------
+Expected Output: "Prefix condition violated!"
+Prefix condition violated!
+
+------------------Testing Constructor 2--------------
+
+------------------Test 6. Valid Input--------------
+Expected Output: "c1 I c0 I c3 I c2 num=4"
+c1 I c0 I c3 I c2 num=4
+
+------------------Testing Constructor 2--------------
+
+------------------Test 7. Invalid Input. Some inputs are not binary--------------
+Expected Output: "Invalid Argument!"
+Invalid argument!
+
+------------------Testing method height--------------
+------------------Test 8. Standard Tree--------------
+Expected Output: 3
+Actual Output:   3
+
+------------------Testing method getNumberOfCodewords--------------
+------------------Test 9. Standard Tree--------------
+Expected Output: 4
+Actual Output:   4
+
+------------------Testing method getCodewords--------------
+------------------Test 10. Lexicographical Order--------------
+Expected Output: [0, 10, 110, 111]
+Actual Output:   [0, 10, 110, 111]
+
+------------------Testing method decode--------------
+------------------Test 11. PDF Example--------------
+Input sequence: 0011001010111
+Expected Output: [c1, c1, c3, c1, c0, c0, c2]
+Actual Output:   [c1, c1, c3, c1, c0, c0, c2]
+
+------------------Testing method toString--------------
+------------------Test 12. String Representation--------------
+Expected Output: (c0,10) (c1,0) (c2,111) (c3,110)
+Actual Output:   (c0,10) (c1,0) (c2,111) (c3,110) 
+
+------------------Testing method toArray--------------
+------------------Test 13. Array Representation--------------
+Expected Array Length: 16
+Actual Array Length:   16
+Checking key indices: SUCCESS (Indices match expected structure)
+
+------------------Testing BONUS method optimize--------------
+------------------Test 14. Non-full tree--------------
+Before Optimize Codewords: [0, 10]
+Calling optimize()...
+Expected Codewords: [0, 1]
+Actual Codewords:   [0, 1]
+Expected Tree: (c0,0) (c1,1)
+Actual Tree:   (c0,0) (c1,1)
+
+------------------Testing BONUS method optimize (Part 2)--------------
+------------------Test 15. Already Full Tree (Should change nothing)--------------
+Before Optimize: [00, 01, 10, 11]
+After Optimize:  [00, 01, 10, 11]
+SUCCESS: Tree remained unchanged.
+
+------------------Testing BONUS method optimize (Part 3)--------------
+------------------Test 16. Redundant Root (All codes start with 0)--------------
+Before: [00, 01]
+After:  [0, 1]
+SUCCESS: Root was correctly bypassed.

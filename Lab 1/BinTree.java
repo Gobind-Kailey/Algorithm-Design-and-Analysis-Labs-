@@ -1,0 +1,433 @@
+import java.util.ArrayList;
+
+public class BinTree{
+
+    // Private members 
+    private TNode root; 
+    private int num; 
+
+    /*
+    For object creation:
+
+    Time Complexity: O(1)
+    Space Complexity: O(1)
+        This constructor initializes the tree with a single root node
+        and sets the number of codewords to zero.
+
+    */
+    public BinTree(){
+        this.root = new TNode(null, null, null); 
+        this.num = 0; // number of codewords 
+    }
+
+    /*
+    Time Complexity: O(n)
+    
+    Space Complexity: O(n)
+        In the worst case, each insertion creates up to n new tree nodes.
+        Over n insertions, the total number of nodes grows as O(n).
+    */
+        public BinTree(String[] a)
+    {
+        // Creating new tree
+        root = new TNode(null, null, null);
+        num = 0;
+        // we are inserting the array a into the tree. 
+        for (int i = 0; i < a.length; i++)
+        {
+            insertCodeword("c" + i, a[i]);
+        }
+    }
+    
+    // This function is used in order to keep the insertCodewordHeaper private
+    // to the outside user. 
+    public void insertCodeword(String symbol, String binary)
+    {
+        insertCodewordHelper(symbol, binary);
+    }
+    
+    
+    /*
+    Time Complexity: O(L) 
+        L is the length of the binary string. The loop processes
+        one character per iteration, and all operations inside
+        the loop run in constant time.
+
+    Space Complexity: O(L)
+        In the worst case, a new tree node is created for each
+        character in the binary string. Thus, the additional
+        memory used grows linearly with L.
+    */
+
+    private void insertCodewordHelper(String symbol, String binary)
+    {   
+        TNode current = root; 
+
+        /*
+        Looping through for the length of the binary string 
+        We are also checking for invalid or prefix conditions
+        in this loop. 
+
+        If there is an error, we throw the appropriate error
+        or we keep traversing through left or right depending on 
+        current bit. 
+
+        */
+        for (int i = 0; i < binary.length(); i++) // O(n)
+        {
+            // current 0 or 1 character 
+            char bit = binary.charAt(i);
+            
+            // If it is not 0 or 1
+            if (bit != '0' && bit != '1')
+                throw new IllegalArgumentException("Invalid argument!");
+
+            // If we encounter an existing codeword before finishing,
+            // then that codeword is a prefix of the new one
+            if (current.data != null)
+                throw new IllegalArgumentException("Prefix condition violated!");
+            
+            // if input is 0, then we will traverse left 
+            if (bit == '0')
+            {
+                if (current.left == null)
+                    current.left = new TNode(null, null, null); // Internal node
+
+                current = current.left;
+            }
+
+            // Otherwise traverse right 
+            else
+            {
+                if (current.right == null)
+                    current.right = new TNode(null, null, null); // internal node 
+
+                current = current.right;
+            }
+        }
+        // This checks for duplicates 
+        // If the final node already has children or data,
+        // then the new codeword is a prefix or duplicate
+        if (current.data != null || current.left != null || current.right != null)
+            throw new IllegalArgumentException("Prefix condition violated!");
+
+        current.data = symbol;
+        num++;
+    }
+
+    // Time Complexity: O(n)
+    // Space Complexity: O(H)
+    // Using the public method we are able to call the private method  
+    public void printTree(){ printTree(root);}
+
+    // Printing the Tree 
+    // This is using in-order travsel. 
+    // Time Complexity: O(n)
+        // N is the total number of nodes in the tree. The method
+        // performs an inorder traversal, visiting each node exactly once.
+
+    // Space Complexity: O(H)
+        // H is the height of the tree. The space complexity is due to
+        // the recursion stack, which can grow up to the height of the tree.
+        // Recursion stack will free itself as it unwinds. 
+
+    private void printTree(TNode t){
+        if(t!=null){
+            printTree(t.left);
+            if(t.data == null )
+                System.out.print("I ");
+            else
+                System.out.print(t.data + " "); 
+            printTree(t.right);
+        }
+    }
+
+    // Returns the number of codewords stored in the tree
+    // Time Complexity: O(1)
+    // Space Complexity: O(1)
+
+    public int getNumberOfCodewords()
+    {
+        // I might need to create an object and then obtain the nums from dot here
+        
+        return this.num; 
+    }
+
+    // Returns the height of the tree
+    // Time Complexity: O(n)
+        // N is the total number of nodes in the tree. The method
+        // recursively visits each node exactly once.
+
+    // Space Complexity: O(H)
+        // H is the height of the tree. The space complexity is due
+        // to the recursion stack, which can grow up to the height
+        // of the tree.
+
+    public int height(){return height(root);} 
+
+    // Need to find the max height of the tree recursivily
+    // it represents how many time we move past the root node 
+    private int height(TNode t)
+    {
+        if(t == null) return -1; 
+        return 1 + Math.max(height(t.left), height(t.right));
+    }
+
+    // Returns all codewords in lexicographical order
+    // Time Complexity: O(n)
+        // N is the number of nodes in the tree and L is the
+        // maximum length of a codeword. Although each node
+        // is visited once, string concatenation (path + '0'
+        // or path + '1') takes O(L) time.
+
+    // Space Complexity: O(n)
+        // C is the number of codewords. The output list stores
+        // C strings, each of length up to L. The recursion stack
+        // uses O(H) space, where H is the height of the tree.
+
+    // For the two functions below 
+    // will return the codeword --> 001 ... 
+
+    public ArrayList<String> getCodewords() 
+    {
+        // New array that will be returned and this has a default of size 10
+        // Will automatically grow as we exceed the 10th. 
+        ArrayList<String> codewords_L = new ArrayList<String>();
+
+        collectCodewords(root, "", codewords_L);
+        return codewords_L;
+    }
+
+    /*
+    The purpose of the helper function below is to traverse in pre-order and 
+    append to the list once the end of the path has been reached. 
+    */
+
+    private void collectCodewords(TNode node, String path, ArrayList<String> list)
+    {
+        if(node == null)
+            return; 
+
+        if(node.data != null)
+            list.add(path); 
+
+        // Traversing left first, and appending 0 to the current path
+        collectCodewords(node.left, path + '0', list);
+
+        // Traversing right and appending 1 to the current path
+        collectCodewords(node.right, path + '1', list);
+    }
+
+    // s= 10 
+    // Decodes a binary string into its corresponding sequence of symbols
+    // Time Complexity: O(L)
+        // L is the length of the input string. The method processes each
+        // bit exactly once, performing constant-time operations per bit.
+
+    // Space Complexity: O(C)
+        // C is the number of decoded symbols. The output list stores
+        // one symbol per decoded codeword. No additional auxiliary
+        // data structures are used.
+    public ArrayList<String> decode(String s)
+    {
+        ArrayList<String> symbols_list = new ArrayList<String>(); 
+
+        TNode current = root;
+
+        for(int i=0; i < s.length(); i ++)
+        {
+            if(s.charAt(i) == '0')
+                current = current.left;  
+
+            else current = current.right; 
+
+            if(current.data !=null)
+            {
+                symbols_list.add(current.data); 
+                current = root; 
+            }
+        }
+        return symbols_list; 
+    }
+
+    /*
+    Creating this helper function to traverse in pre order and 
+    keep appending to the end of the array, until it is complete 
+
+    Time Complexity: O(n)
+
+    Space Complexity: O(n)
+
+    */
+    // pre order 
+    private void collectCodewords_toString(TNode node, String path, String[] codeList)
+    {
+        // This is if we have reached the end 
+        if(node == null)
+            return; 
+
+        // Found a c value 
+        if(node.data != null)
+        {
+            int index = Integer.parseInt(node.data.substring(1)); 
+            codeList[index] = path; 
+        }
+        // Traversing left first, and appending 0 to the current path
+        collectCodewords_toString(node.left, path + '0', codeList);
+
+        // Traversing right and appending 1 to the current path
+        collectCodewords_toString(node.right, path + '1', codeList);
+    }
+
+
+    /*
+    Traverse the tree once
+    Record each symbol’s codeword
+    Store it at the position indicated by its index
+    I am going to use charAt() to gain access to the specific 
+    point index and then depending on that, append it into the list 
+    */
+
+    // Time Complexity: O(n^2)
+
+    // Space Complexity: O(n)
+    // The method stores the final output string and intermediate 
+    // codewords whose total size is proportional to the output.
+
+    
+
+    public String toString() 
+    {   
+        String path = ""; 
+        String index_code = ""; 
+        String[] codes = new String[num]; 
+        
+        collectCodewords_toString(root, path, codes);
+
+        for(int i = 0; i < codes.length; i++)
+        {
+            // += does 
+            /*
+            1. Allocates new memory for a brand new, larger string.
+            2. Copies the entire contents of the old index_code into the new memory.
+            3. Appends the new part at the end.
+            */
+            index_code += "(c" + i + "," + codes[i] + ") "; 
+        }
+        return index_code; 
+    }
+
+    // Time complexity: O(n)
+    // Space complexity: O(H) - H represents the hight of the tree. 
+
+    private void collectCodewords_toArray(TNode node, String path, String[] codeList, int index)
+    {
+        // This is if we have reached the end 
+
+        if(node == null)
+        {
+            // Every element is already null by default so this is not needed. 
+            // codeList[index] = null; 
+            return; 
+        }
+
+        // When we come across a leaf
+        if(node.data != null)
+        {
+            codeList[index] = path;  
+        }
+
+        // When we come across a internal node 
+        // if(node.left != null || node.right != null)
+        else 
+        {
+            codeList[index] = "I"; 
+        }
+        // Traversing left first, and appending 0 to the current path
+        // Note that to go to the left node we do 2*index 
+        collectCodewords_toArray(node.left, path + '0', codeList, 2*index);
+
+        // Traversing right and appending 1 to the current path
+        // Note that to go to the right node we would do 2*index + 1
+        collectCodewords_toArray(node.right, path + '1', codeList, 2*index + 1);
+    }
+
+    // Time Complexity: O(2^n)
+    // Space Complexity: O(2^H)
+    // If the tree were to be perfectly balanced then it would be O(nlogn)
+    public String[] toArray() 
+    {   
+        int size = (int) Math.pow(2, height() + 1); //for height: O(n) 
+
+        String[] element_type = new String[size]; // Array: O(2^H)
+
+        element_type[0] = null;
+
+        int index = 1; 
+        String path = ""; 
+
+        collectCodewords_toArray(root, path, element_type, index); // O(n * H)
+
+        return element_type; 
+    }
+
+    public void optimize() {
+        // We re-assign root because the optimization might happen at the very top level
+        root = optimize(root);
+    }
+
+
+    // If the tree is not full then we make it full by removing some of the leafs. 
+
+    /*
+    Time Complexity: O(n) 
+        We perform a post-order traversal that visits every 
+        node in the tree exactly once. The operations at each node are constant time.
+
+    Space Complexity: O(n) The space is required for the recursion stack, 
+        where H is the height of the tree. In the worst case, H = N.
+    */ 
+
+    // Recursive helper method
+    private TNode optimize(TNode node) {              
+        // Base case: If node is null, return null 
+        if (node == null) {
+            return null;
+        }
+
+        // Base case: If node is a leaf, Return it.
+        if (node.left == null && node.right == null) {
+            return node;
+        }
+
+        // Recursive Step (Post-Order):
+        // Fix the children first so we are optimizing from the bottom up.
+        node.left = optimize(node.left);
+        node.right = optimize(node.right);
+
+        // If I have a Left child but NO Right child
+        // Return my Left child to take my place.
+        if (node.left != null && node.right == null) {
+            return node.left;
+        }
+
+        // If I have a Right child but no Left child
+        // Return my Right child to take my place (Parent)
+        if (node.right != null && node.left == null) {
+            return node.right;
+        }
+
+        // If both children present 
+        return node;
+    } 
+
+
+
+} 
+
+
+
+
+
+
+
