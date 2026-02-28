@@ -140,9 +140,7 @@ public class HandsMaxHeap {
                 break; 
             }
         }
-
     }
-
 
     // [Problem 1-4] Complete the Max Heap ADT Public Methods
     
@@ -162,7 +160,7 @@ public class HandsMaxHeap {
             for (int i = 0; i <= size; i++) {
                 newHeap[i] = myHeap[i];
             }
-        
+
             myHeap = newHeap; 
 
         }
@@ -182,14 +180,13 @@ public class HandsMaxHeap {
         // My plan is to replace the head node with the last node and then perculate down and size--. 
         // Storing the max, so that we can return it. 
         Hands max_hand = myHeap[1]; 
-        // Replacing last with first 
+        // Replacing first with last
         myHeap[1] = myHeap[size]; 
         // Removing the last element
         size--; 
         // perculate down
         downHeapify(1);
         return max_hand; 
-
     }
 
     public int getSize()
@@ -233,14 +230,14 @@ public class HandsMaxHeap {
     // Sorting IN PLACE means O(1) extra memory
     public static void heapSort(Hands[] myHands) {
         int n = myHands.length;
-
+        
         // 1: Build Max Heap (0-based)
         // Start from the last parent node and heapify down
         for (int i = n / 2 - 1; i >= 0; i--) {
             localDownHeapify(myHands, n, i);
         }
-
-        // PHASE 2: Extract Elements (Swap Max to End)
+    
+        // 2: Extract Elements (Swap Max to End)
         // This produces an ASCENDING array [Smallest ... Largest]
         for (int i = n - 1; i > 0; i--) {
             // Move current root (Max) to the end
@@ -250,9 +247,9 @@ public class HandsMaxHeap {
             localDownHeapify(myHands, i, 0);
         }
 
-        // PHASE 3: Reverse to get DESCENDING Order
+        // 3: Reverse to get DESCENDING Order
         // Current state: [Min, ..., Max] -> Goal: [Max, ..., Min]
-        for (int i = 0; i < n / 2; i++) {
+        for (int i = 0; i < n / 2; i++) { 
             swap(myHands, i, n - 1 - i);
         }
     }

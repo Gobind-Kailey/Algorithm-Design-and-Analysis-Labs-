@@ -33,23 +33,22 @@ public class ModelCode_CardGame {
         {0, 1, 2, 3, 7}
         ...
         {0, 1, 2, 3, 24}
-        {0, 1, 2, 4, 5}
+        {0, 1, 2, 4, 4}
         */
 
         myMaxHeap = new HandsMaxHeap(54000); // space just has to be greater than (25 C 5)
-        
         for (int i = 0; i < thisPocket.length - 4; i++) {
             for (int j = i + 1; j < thisPocket.length - 3; j++) {
                 for (int k = j + 1; k < thisPocket.length - 2; k++) {
                     for (int l = k + 1; l < thisPocket.length - 1; l++) {
                         for (int m = l + 1; m < thisPocket.length; m++) {
-                            // Construct the hand here 
+                            // Construct the hand here
                             Hands tempHand = new Hands(thisPocket[i], thisPocket[j], thisPocket[k], 
                                                         thisPocket[l], thisPocket[m]); 
                             // Making sure we are working with valid hand. 
                             if(tempHand.isAValidHand()) 
                             {
-                                myMaxHeap.insert(tempHand); 
+                                myMaxHeap.insert(tempHand);  
                             }
                         }
                     }
@@ -101,6 +100,7 @@ public class ModelCode_CardGame {
         // Print the contents of myMaxHeap
         
         // [Problem 3] Implementing Game Logic Part 1 - Aggresive AI: Always Picks the Strongest Hand
+        // keep looping through while we still have at-least 5 cards 
         for(int i = 0; pocketSize > 4; i++)
         {            
                                    
@@ -113,11 +113,11 @@ public class ModelCode_CardGame {
 
             // Step 1: Choose the hand 
             // Checking if it is not empty
-            if(!myMaxHeap.isEmpty())  
+            if(!myMaxHeap.isEmpty())          
             {
                 // Removing the max value from it. 
                 myMove = myMaxHeap.removeMax();  
-                System.out.print("Aggressive AI plays: ");
+                System.out.print("Aggressive AI plays: "); 
             }
             else // pick the random 5 cards 
             // Print it out once past this if else statements. 
@@ -127,7 +127,7 @@ public class ModelCode_CardGame {
             }
             myMove.printMyHand();
             System.out.println();
-
+            
             // Step 2:
             // - Remove the Cards used in the move from the pocket cards and update the Max Heap
             // - Print the remaining cards and the contents of the heap
@@ -153,6 +153,7 @@ public class ModelCode_CardGame {
             myCards = remainingCards; 
             pocketSize-= 5; 
 
+            // This is where we are calling this multiple times 
             generateHands(myCards);
 
 

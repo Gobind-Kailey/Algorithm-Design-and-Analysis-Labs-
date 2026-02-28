@@ -1,4 +1,3 @@
-import java.util.Vector;
 
 public class HandsRBT {
     
@@ -57,12 +56,44 @@ public class HandsRBT {
 
     // Activity 1 - Design Rotation Algorithm
     /////////////////////////////////////////////////
-
+    ///
     // [TODO]: Required Helper Functions for RBT Rotation
     private void rotateLeft(HandsRBTNode thisNode)
     {
         // This method performs the Leftward Node Rotation (rotation between thisNode and its right child)
         // don't forget to update children and parent pointers
+
+        // Identify R (the right child) as mentioned in the lab manual 
+        HandsRBTNode R = thisNode.right;
+
+        // Turning R's left subtree into thisNode's right subtree
+        thisNode.right = R.left;   
+        if(thisNode.left != null)
+        {   
+            // Parent of RL will become N 
+            R.left.parent = thisNode; 
+        }
+
+        // Linking R's parent to thisNode's parent
+        R.parent = thisNode.parent; 
+
+        // Just checking where thisNode was in the RBT, (Root, right child or left child)
+        if (thisNode.parent == null) {
+        // thisNode was the root
+        this.root = R;
+        } else if (thisNode == thisNode.parent.left) {
+            // thisNode was a left child
+            thisNode.parent.left = R;
+        } else {
+            // thisNode was a right child
+            thisNode.parent.right = R;
+        }
+        // 4. Put thisNode on R's left
+
+        R.left = thisNode;
+        thisNode.parent = R;
+       
+            
     }
 
     // [TODO]: Required Helper Functions for RBT Rotation
@@ -70,6 +101,35 @@ public class HandsRBT {
     {
         // This method performs the Rightward Node Rotation (rotation between thisNode and its left child)
         // don't forget to update children and parent pointers
+
+        // Identify L (the left child)
+        HandsRBTNode L = thisNode.left;
+
+        // 2. Turning L's right subtree (LR) into thisNode's left subtree
+        thisNode.left = L.right;
+        if (L.right != null) {
+            L.right.parent = thisNode; // Update LR's parent pointer
+        }
+
+        // 3. Linking L's parent to thisNode's parent (the "Grandparent" handshake)
+        L.parent = thisNode.parent;
+
+        // Just checking where thisNode was in the RBT, (Root, right child or left child)
+        if (thisNode.parent == null) {
+            // thisNode was the root of the whole tree
+            this.root = L;
+        } else if (thisNode == thisNode.parent.right) {
+            // thisNode was a right child
+            thisNode.parent.right = L;
+        } else {
+            // thisNode was a left child
+            thisNode.parent.left = L;
+        }
+
+        // 4. Put thisNode on L's right
+        L.right = thisNode;
+        thisNode.parent = L;
+
 
     }
 
@@ -123,6 +183,46 @@ public class HandsRBT {
         // If a red violation occurs, fix it by invoking the private method fixRedViolation
         // Else exit
         
+        // If the RBT is empty, insert the new node as the root and colour it BLACK
+        if (this.root == null) {
+            this.root = new HandsRBTNode(thisHand);
+            this.root.colour = BLACK; 
+            return;
+        }
+
+        HandsRBTNode current = this.root;
+        HandsRBTNode parent = null;
+
+        // Traverse from the root to find the insertion point as in a BST
+        while (current != null) {   
+            parent = current;
+            
+            if (thisHand.isMyHandEqual(current.myHand)) {
+                // If thisHand is already in the RBT, do nothing and exit
+                return;
+            } else if (thisHand.isMyHandSmaller(current.myHand)) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+
+        // Step 2: Insert the new node
+        HandsRBTNode newNode = new HandsRBTNode(thisHand);
+        newNode.parent = parent;
+        newNode.colour = RED; // New nodes are always inserted as RED
+
+        // Attach the new node to the correct side of the parent
+        if (thisHand.isMyHandSmaller(parent.myHand)) {
+            parent.left = newNode;
+        } else {
+            parent.right = newNode;
+        }
+
+        // If a red violation occurs (i.e., the parent is also RED), fix it
+        if (newNode.parent.colour == RED) {
+            fixRedViolation(newNode);
+        }
     }
 
     // [TODO]: Implement the fixRedViolation algorithm   
@@ -134,7 +234,69 @@ public class HandsRBT {
      // Case 1. Red Uncle. (Here you have to check if the red violation moves up the tree; if so, correct it recursively or non-recursively - your choice)
      // Case 2. Black Uncle & Outergrandchild
      // Case 3. Black Uncle & Innergrandchild   
-       
+
+
+     // We only need to fix if the parent is also RED.
+        // The loop continues as long as we have a RED-RED violation.
+        while (thisNode != null && thisNode != this.root && thisNode.parent.colour == RED) {
+            HandsRBTNode parent = thisNode.parent;
+            HandsRBTNode grandparent = parent.parent;
+            HandsRBTNode uncle = getUncle(parent); // Helper method to get the Uncle node
+
+            // Check if Uncle is RED (Case 1). 
+            // Note: If uncle is null, it is considered BLACK.
+            if (uncle != null && uncle.colour == RED) {
+                // Case 1: Red Uncle
+                // Flip the colours of parent, uncle, and grandparent
+                parent.colour = BLACK;
+                uncle.colour = BLACK;
+                grandparent.colour = RED;
+                
+                // The grandparent is now RED, which might cause a new violation higher up.
+                // Move our "thisNode" pointer up to the grandparent to check in the next loop iteration.
+                thisNode = grandparent;
+            } else {
+                // The Uncle is BLACK (or null, which counts as BLACK).
+                // We must handle Left-heavy and Right-heavy sides symmetrically.
+                
+                if (parent == grandparent.left) { // Left-heavy side
+                    
+                    if (thisNode == parent.right) {
+                        // Case 3: Black Uncle & Inner Grandchild (Triangle shape)
+                        thisNode = parent;
+                        rotateLeft(thisNode);
+                        
+                        // After rotation, update parent and grandparent pointers to fall into Case 2
+                        parent = thisNode.parent;
+                        grandparent = parent.parent;
+                    }
+                    
+                    // Case 2: Black Uncle & Outer Grandchild (Line shape)
+                    parent.colour = BLACK;
+                    grandparent.colour = RED;
+                    rotateRight(grandparent);
+                    
+                } else { // Right-heavy side (Mirror image of the above logic)
+                    
+                    if (thisNode == parent.left) {
+                        // Case 3: Black Uncle & Inner Grandchild (Triangle shape)
+                        thisNode = parent;
+                        rotateRight(thisNode);
+                        
+                        // After rotation, update parent and grandparent pointers to fall into Case 2
+                        parent = thisNode.parent;
+                        grandparent = parent.parent;
+                    }
+                    
+                    // Case 2: Black Uncle & Outer Grandchild (Line shape)
+                    parent.colour = BLACK;
+                    grandparent.colour = RED;
+                    rotateLeft(grandparent);
+                }
+            }
+        }
+        // After all violations are fixed, ensure the root remains BLACK to satisfy RBT properties.
+        this.root.colour = BLACK;
     }
 
     // Activity 3 - Delete All Hands from RBT with cards from the consumed hand
@@ -144,7 +306,14 @@ public class HandsRBT {
     // This method invokes deleteHandsWithCard() for all 5 cards in the consumedHand
     public void deleteInvalidHands(Hands consumedHand)
     {
-        
+        // Iterate through all 5 cards in the consumedHand
+        for (int i = 0; i < 5; i++) {
+            // Retrieve the specific card using the Hands class method
+            Card currentCard = consumedHand.getCard(i);
+            
+            // Invoke the private helper method to wipe out all hands containing this card
+            deleteHandsWithCard(currentCard);
+        }
     }
 
     // [TODO]: Implement this method that supports the card game activities. It deletes from RBT all hands with thisCard 
@@ -154,7 +323,39 @@ public class HandsRBT {
     // Traverse through the entire RBT, and register all the nodes with hands containing thisCard in a Vector 
     // Then, iterate through the Vector and delete every single registered node from RBT using the existing delete() method.
     // Use the generic class Vector<E> in package java.util. See Java API specification
+    
+    // Create the Vector to register all hands that need deletion
+        java.util.Vector<Hands> handsToDelete = new java.util.Vector<>();
+        
+        // 1. Traverse the entire RBT and collect the invalid hands
+        collectHandsHelper(this.root, thisCard, handsToDelete);
+        
+        // 2. Iterate through the Vector and delete every single registered node
+        for (Hands invalidHand : handsToDelete) {
+            delete(invalidHand); // Using the existing delete() method
+        }
+    
     }      
+
+    private void collectHandsHelper(HandsRBTNode node, Card targetCard, java.util.Vector<Hands> list)
+    {
+        // Base case: if we hit a null leaf, stop and return
+        if (node == null) {
+            return;
+        }
+        
+        // Traverse the left subtree
+        collectHandsHelper(node.left, targetCard, list);
+        
+        // Check the current node. 
+        // Use the hasCard() method from the Hands class to see if the targetCard is in this hand.
+        if (node.myHand != null && node.myHand.hasCard(targetCard)) {
+            list.add(node.myHand); // Register the hand in our Vector
+        }
+        
+        // Traverse the right subtree
+        collectHandsHelper(node.right, targetCard, list);
+    }
     
     // Deletion Method 1 - promote the smallest of the right tree
     private HandsRBTNode findMin(HandsRBTNode thisNode)
@@ -1111,15 +1312,53 @@ public class HandsRBT {
         totalTestCount++;
 
         // Add your own custom test here
-        // Design another case where you will trigger Case 4 (doesn't matter if L or R)
-        // You may reuse the Case 4 / Case 5 test case setup, and modify the Hands input.
+        // Design another case where you will trigger Case 4 (Inner Grandchild / Zig-Zag)
+        HandsRBT testRBT = new HandsRBT();
+        Hands myHandsArray[] = new Hands[5];        
+        
+        // Using Four of a Kinds to guarantee exact insertion ordering
+        myHandsArray[0] = new Hands(new Card(8, 'S'), new Card(8, 'D'), new Card(8, 'C'), new Card(8, 'H'), new Card(14, 'S'));  // Root
+        myHandsArray[1] = new Hands(new Card(12, 'S'), new Card(12, 'D'), new Card(12, 'C'), new Card(12, 'H'), new Card(14, 'S')); // Right (Larger)
+        myHandsArray[2] = new Hands(new Card(4, 'S'), new Card(4, 'D'), new Card(4, 'C'), new Card(4, 'H'), new Card(14, 'S'));  // Left (Smaller)
+        myHandsArray[3] = new Hands(new Card(2, 'S'), new Card(2, 'D'), new Card(2, 'C'), new Card(2, 'H'), new Card(14, 'S'));  // Triggers Case 3 (Red Uncle)
+        myHandsArray[4] = new Hands(new Card(3, 'S'), new Card(3, 'D'), new Card(3, 'C'), new Card(3, 'H'), new Card(14, 'S'));  // Triggers Case 4 (Inner Grandchild)
 
-        // WARNING!! remove these lines when adding test case here
-        System.out.println("Did you add the Custom Test Case?");
-        passed &= false;
-        // WARNING!! remove these lines when adding test case here
+        testRBT.insert(myHandsArray[0]);
+        testRBT.insert(myHandsArray[1]);
+        testRBT.insert(myHandsArray[2]);
+        testRBT.insert(myHandsArray[3]); 
+        testRBT.insert(myHandsArray[4]); // Case 4 triggered here
+
+        HandsRBTNode testRoot = testRBT.getRoot();
         
+        System.out.println(">> Check Root Node");
+        passed &= assertEquals(testRoot.myHand, myHandsArray[0]);
+        System.out.println(">> Check Root Colour (Always Black)");
+        passed &= assertEquals(testRoot.colour, BLACK); 
+        System.out.println(">> Check Right Child");
+        passed &= assertEquals(testRoot.right.myHand, myHandsArray[1]);        
+        System.out.println(">> Check Right Child Colour");
+        passed &= assertEquals(testRoot.right.colour, BLACK);
         
+        System.out.println(">> Check Left Child (3s moved up after double rotation)");
+        passed &= assertEquals(testRoot.left.myHand, myHandsArray[4]);        
+        System.out.println(">> Check Left Child Colour");
+        passed &= assertEquals(testRoot.left.colour, BLACK); 
+        
+        System.out.println(">> Check Left Grandchild of Left (2s)");
+        passed &= assertEquals(testRoot.left.left.myHand, myHandsArray[3]);
+        passed &= assertEquals(testRoot.left.left.colour, RED);
+        System.out.println(">> Check Right Grandchild of Left (4s)");
+        passed &= assertEquals(testRoot.left.right.myHand, myHandsArray[2]);
+        passed &= assertEquals(testRoot.left.right.colour, RED);
+        
+        System.out.println(">> Ensure no extra children exist");
+        passed &= assertEquals(testRoot.left.left.left, null);
+        passed &= assertEquals(testRoot.left.left.right, null);
+        passed &= assertEquals(testRoot.left.right.left, null);
+        passed &= assertEquals(testRoot.left.right.right, null);
+        passed &= assertEquals(testRoot.right.left, null);
+        passed &= assertEquals(testRoot.right.right, null);
 
         // Tear Down
         totalPassed &= passed;
@@ -1138,14 +1377,53 @@ public class HandsRBT {
         totalTestCount++;
 
         // Add your own custom test here
-        // Design another case where you will trigger Case 5 (doesn't matter if L or R)
-        // You may reuse the Case 4 / Case 5 test case setup, and modify the Hands input.
-
-        // WARNING!! remove these lines when adding test case here
-        System.out.println("Did you add the Custom Test Case?");
-        passed &= false;
-        // WARNING!! remove these lines when adding test case here
+        // Design another case where you will trigger Case 5 (Outer Grandchild / Straight Line)
+        HandsRBT testRBT = new HandsRBT();
+        Hands myHandsArray[] = new Hands[5];        
         
+        // Swapping the order of 2s and 3s to create a straight Left-Left-Left line
+        myHandsArray[0] = new Hands(new Card(8, 'S'), new Card(8, 'D'), new Card(8, 'C'), new Card(8, 'H'), new Card(14, 'S'));  // Root
+        myHandsArray[1] = new Hands(new Card(12, 'S'), new Card(12, 'D'), new Card(12, 'C'), new Card(12, 'H'), new Card(14, 'S')); // Right
+        myHandsArray[2] = new Hands(new Card(4, 'S'), new Card(4, 'D'), new Card(4, 'C'), new Card(4, 'H'), new Card(14, 'S'));  // Left
+        myHandsArray[3] = new Hands(new Card(3, 'S'), new Card(3, 'D'), new Card(3, 'C'), new Card(3, 'H'), new Card(14, 'S'));  // Triggers Case 3
+        myHandsArray[4] = new Hands(new Card(2, 'S'), new Card(2, 'D'), new Card(2, 'C'), new Card(2, 'H'), new Card(14, 'S'));  // Triggers Case 5 (Outer Grandchild)
+
+        testRBT.insert(myHandsArray[0]);
+        testRBT.insert(myHandsArray[1]);
+        testRBT.insert(myHandsArray[2]);
+        testRBT.insert(myHandsArray[3]);
+        testRBT.insert(myHandsArray[4]); // Case 5 triggered here
+
+        HandsRBTNode testRoot = testRBT.getRoot();
+        
+        System.out.println(">> Check Root Node");
+        passed &= assertEquals(testRoot.myHand, myHandsArray[0]);
+        System.out.println(">> Check Root Colour (Always Black)");
+        passed &= assertEquals(testRoot.colour, BLACK); 
+        System.out.println(">> Check Right Child");
+        passed &= assertEquals(testRoot.right.myHand, myHandsArray[1]);        
+        System.out.println(">> Check Right Child Colour");
+        passed &= assertEquals(testRoot.right.colour, BLACK);
+        
+        System.out.println(">> Check Left Child (3s moved up after single rotation)");
+        passed &= assertEquals(testRoot.left.myHand, myHandsArray[3]);        
+        System.out.println(">> Check Left Child Colour");
+        passed &= assertEquals(testRoot.left.colour, BLACK); 
+        
+        System.out.println(">> Check Left Grandchild of Left (2s)");
+        passed &= assertEquals(testRoot.left.left.myHand, myHandsArray[4]);
+        passed &= assertEquals(testRoot.left.left.colour, RED);
+        System.out.println(">> Check Right Grandchild of Left (4s)");
+        passed &= assertEquals(testRoot.left.right.myHand, myHandsArray[2]);
+        passed &= assertEquals(testRoot.left.right.colour, RED);
+        
+        System.out.println(">> Ensure no extra children exist");
+        passed &= assertEquals(testRoot.left.left.left, null);
+        passed &= assertEquals(testRoot.left.left.right, null);
+        passed &= assertEquals(testRoot.left.right.left, null);
+        passed &= assertEquals(testRoot.left.right.right, null);
+        passed &= assertEquals(testRoot.right.left, null);
+        passed &= assertEquals(testRoot.right.right, null);
 
         // Tear Down
         totalPassed &= passed;
@@ -1200,7 +1478,7 @@ public class HandsRBT {
             totalPassCount++;            
         }
     }
-
+    
     private static void testCustomDeleteHandsWithCard()
     {
         // Setup
@@ -1208,15 +1486,44 @@ public class HandsRBT {
         boolean passed = true;
         totalTestCount++;
 
-        // Add your own custom test here
         // Design another case that populates the RBT with at least 5 hands, with 3 of them containing the same card
-        // Then try remove all hands with the card, and confirm whether the resultant RBT contains only 2 hands without the card.
-
-        // WARNING!! remove these lines when adding test case here
-        System.out.println("Did you add the Custom Test Case?");
-        passed &= false;
-        // WARNING!! remove these lines when adding test case here
+        HandsRBT testRBT = new HandsRBT();
+        Hands myHandsArray[] = new Hands[5];        
         
+        // myHandsArray[0] and [1] will NOT contain the target card (14 'S')
+        // Using Four-of-a-Kinds to ensure strict ranking (6s is larger than 4s)
+        myHandsArray[0] = new Hands(new Card(6, 'S'), new Card(6, 'D'), new Card(6, 'C'), new Card(6, 'H'), new Card(2, 'S'));
+        myHandsArray[1] = new Hands(new Card(4, 'S'), new Card(4, 'D'), new Card(4, 'C'), new Card(4, 'H'), new Card(2, 'D'));
+        
+        // myHandsArray[2], [3], and [4] WILL contain the target card (14 'S')
+        myHandsArray[2] = new Hands(new Card(10, 'S'), new Card(10, 'D'), new Card(10, 'C'), new Card(10, 'H'), new Card(14, 'S'));
+        myHandsArray[3] = new Hands(new Card(12, 'S'), new Card(12, 'D'), new Card(12, 'C'), new Card(12, 'H'), new Card(14, 'S'));
+        myHandsArray[4] = new Hands(new Card(9, 'S'), new Card(9, 'D'), new Card(9, 'C'), new Card(9, 'H'), new Card(14, 'S'));
+        
+        testRBT.insert(myHandsArray[0]); // Root
+        testRBT.insert(myHandsArray[1]); // Left child
+        testRBT.insert(myHandsArray[2]); // Right child
+        testRBT.insert(myHandsArray[3]); // Right-Right
+        testRBT.insert(myHandsArray[4]); // Right-Left
+
+        // Try remove all hands with the card (14 'S')
+        testRBT.deleteHandsWithCard(new Card(14, 'S'));
+
+        HandsRBTNode testRoot = testRBT.getRoot();
+
+        // Confirm whether the resultant RBT contains only 2 hands without the card
+        System.out.println(">> Check Root Node (6s Quad)");
+        passed &= assertEquals(testRoot.myHand, myHandsArray[0]);
+        System.out.println(">> Check Root Colour (Always Black)");
+        passed &= assertEquals(testRoot.colour, BLACK); 
+        
+        System.out.println(">> Check Left Child (4s Quad)");
+        passed &= assertEquals(testRoot.left.myHand, myHandsArray[1]);                                
+        System.out.println(">> Check Left Child Colour (Recolored to RED after delete correction)");
+        passed &= assertEquals(testRoot.left.colour, RED); 
+        
+        System.out.println(">> Check Right Child (Should be completely purged)");
+        passed &= assertEquals(testRoot.right, null); 
 
         // Tear Down
         totalPassed &= passed;
@@ -1226,7 +1533,6 @@ public class HandsRBT {
             totalPassCount++;            
         }
     }
-
     
 
 
