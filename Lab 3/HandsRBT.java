@@ -68,7 +68,7 @@ public class HandsRBT {
 
         // Turning R's left subtree into thisNode's right subtree
         thisNode.right = R.left;   
-        if(thisNode.left != null)
+        if(R.left != null)
         {   
             // Parent of RL will become N 
             R.left.parent = thisNode; 
@@ -1478,7 +1478,7 @@ public class HandsRBT {
             totalPassCount++;            
         }
     }
-    
+
     private static void testCustomDeleteHandsWithCard()
     {
         // Setup

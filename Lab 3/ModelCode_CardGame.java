@@ -11,7 +11,7 @@ public class ModelCode_CardGame {
         Card[] aiCards, myCards;        
         Hands aiHand, myHand;
         
-        HandsBST aiBST; // you may replace this with your own HandsMaxHeap for improved performance.
+        HandsMaxHeap aiHeap; // you may replace this with your own HandsMaxHeap for improved performance.
         HandsRBT myRBT;
                 
         int aiPocketSize = POCKETSIZE, myPocketSize = POCKETSIZE;
@@ -32,11 +32,11 @@ public class ModelCode_CardGame {
         // At the end of the game, report winner with score
 
 
-        // You can upgrade your Lab 2 algorithm to Lab 3 to complete this game
+        // You can upgrade your Lab 2 algorithm to Lab 3 to complete this game - OK
         // You can also redesign the entire game loop logic
 
         // Step 1 - Initialization
-        //  - Given the CardPool instance, get 25 cards (POCKETSIZE) for both AI and Player.
+        //  - Given the CardPool instance, get 25 cards (POCKETSIZE) for both AI and Player. - 50 cards
         //  - Sort their cards using sortCards(). Assign a serial number to Player's cards
         //  - Instantiate a HandsRBT for the player and invoke generateHandsIntoRBT() 
         //    to populate the player RBT with all possible hands from the pocket card.
@@ -83,19 +83,201 @@ public class ModelCode_CardGame {
         // Step 3 - Report the Results
         //  - This part is easy.  Refer to the provided sample execution for printout format
         
+
+        // Step 1: 
+
+        // Step 1 - Initialization
+        // Draw 25 cards for AI and Player from the pool directly into the arrays
+        aiCards = myCardPool.getRandomCards(POCKETSIZE);
+        myCards = myCardPool.getRandomCards(POCKETSIZE);
+
+        // Sort their cards using the provided sortCards() method
+        sortCards(aiCards);
+        sortCards(myCards);
+
+        // Instantiate the Data Structures
+        aiHeap = new HandsMaxHeap(54000); 
+        myRBT = new HandsRBT();
+
+        // Populate the data structures with all possible 5-card combinations
+        generateHandsIntoHeap(aiCards, aiHeap);
+        generateHandsIntoRBT(myCards, myRBT);
+
+
+        // Step 2 - Game Loop Logic 
+        for (int round = 0; round < 5; round++) {
+            
+            // Step 2-1: Print Both AI and Player Pocket Cards [cite: 395]
+            System.out.println("AI Pocket Cards:");
+            for (int i = 0; i < aiPocketSize; i++) {
+                // Use the printCard() method instead of toString()
+                aiCards[i].printCard(); 
+                System.out.print(" "); // Add a space between cards
+            }
+            System.out.println("\n");
+            
+            System.out.println("My Pocket Cards (Count: " + myPocketSize + ")");
+            for (int i = 0; i < myPocketSize; i++) {
+                // Formatting Player cards with serial numbers [1] to [myPocketSize] [cite: 396-397]
+                System.out.print("[" + (i + 1) + "]");
+                myCards[i].printCard(); // Print the card right after the bracket
+                System.out.print(" "); // Add a space before the next card
+            }
+            System.out.println("\n");
+
+            // Check if RBT is empty and notify player 
+            if (myRBT.isEmpty()) {
+                System.out.println("OUT OF HANDS!");
+            }
+
+            // Step 2-2: Get Player Hand & Validate
+            while (true) {
+                myHand = getUserHand(myCards);
+                
+                // If the hand is not in the RBT AND the RBT is not empty, block the pass move
+                if (!myRBT.isEmpty() && myRBT.findNode(myHand) == null) {
+                    System.out.println("Cannot Pass! You still have valid 5-card hands to make a move.");
+                } else {
+                    break; // Hand is valid, or tree is empty (so any 5 cards are allowed)
+                }
+            }
+
+            // Step 2-3: Update RBT and Player Pocket Cards
+            if (!myRBT.isEmpty()) {
+                myRBT.deleteInvalidHands(myHand); // Purge invalid combinations
+            }
+            
+            // Remove consumed cards from myCards and shift the array down
+            for (int c = 0; c < 5; c++) {
+                Card targetCard = myHand.getCard(c);
+                for (int i = 0; i < myPocketSize; i++) {
+                    if (myCards[i] == targetCard) { // Object reference match
+                        for (int j = i; j < myPocketSize - 1; j++) {
+                            myCards[j] = myCards[j + 1];
+                        }
+                        myPocketSize--;
+                        break;
+                    }
+                }
+            }
+
+            // Step 2-4: Aggressive AI Logic 
+            if (aiHeap.isEmpty()) { 
+                // Out of valid hands, pick the first 5 available cards to pass
+                aiHand = new Hands(aiCards[0], aiCards[1], aiCards[2], aiCards[3], aiCards[4]);
+            } else {
+                aiHand = aiHeap.removeMax(); // Get the strongest hand
+            }
+
+            // Remove consumed cards from aiCards and shift the array down
+            for (int c = 0; c < 5; c++) {
+                Card targetCard = aiHand.getCard(c);
+                for (int i = 0; i < aiPocketSize; i++) {
+                    if (aiCards[i] == targetCard) {
+                        for (int j = i; j < aiPocketSize - 1; j++) {
+                            aiCards[j] = aiCards[j + 1];
+                        }
+                        aiPocketSize--;
+                        break;
+                    }
+                }
+            }
+
+            // Regenerate the AI Heap with the remaining pocket cards
+            aiHeap = new HandsMaxHeap(54000); 
+            generateHandsIntoHeap(aiCards, aiHeap);
+
+            // Step 2-5: Determine Win/Lose and Update Scores
+            System.out.print("\nMy Hand: ");
+            myHand.printMyHand(); 
+            
+            System.out.print("\nAI Hand: ");
+            aiHand.printMyHand();
+            
+            if (myHand.isMyHandLarger(aiHand)) {
+                playerScore++;
+                System.out.println("\n[RESULT] Player Wins This Round!");
+            } else if (aiHand.isMyHandLarger(myHand)) {
+                aiScore++;
+                System.out.println("\n[RESULT] AI Wins This Round!");
+            } else {
+                System.out.println("\n[RESULT] Draw! No points awarded.");
+            }
+            System.out.println();
+        }
+
+        // Step 3 - Report the Results
+        System.out.println("==== Game Result ====");
+        System.out.println("Player Score: " + playerScore);
+        System.out.println("AI Score: " + aiScore);
+        
+        if (playerScore > aiScore) {
+            System.out.println("<< Player Won >>");
+        } else if (aiScore > playerScore) {
+            System.out.println("<< AI Won >>");
+        } else {
+            System.out.println("<< Draw >>");
+        }
+
         myInputScanner.close();
+
     }
 
-    public static void generateHandsIntoBST(Card[] cards, HandsBST thisBST)
-    {
-        // Implement this if you are using the BST version for the Aggressive AI
-        //Populate all valid hands into the BST
+
     
+
+    public static void generateHandsIntoHeap(Card[] cards, HandsMaxHeap thisHeap)
+    {
+        // If thisPocket has less than 5 cards, no hand can be generated, thus the heap will be empty
+        if(cards.length < 5)
+        {
+            return; // no hand can be generated (empty heap). 
+        }
+
+        for (int i = 0; i < cards.length - 4; i++) {
+            for (int j = i + 1; j < cards.length - 3; j++) {
+                for (int k = j + 1; k < cards.length - 2; k++) {
+                    for (int l = k + 1; l < cards.length - 1; l++) {
+                        for (int m = l + 1; m < cards.length; m++) {
+                            // Construct the hand here
+                            Hands tempHand = new Hands(cards[i], cards[j], cards[k], 
+                                                        cards[l], cards[m]); 
+                            // Making sure we are working with valid hand. 
+                            if(tempHand.isAValidHand()) 
+                            {
+                                thisHeap.insert(tempHand);  
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Pay attention that memory needs to be allocated for the heap!
     }
 
     public static void generateHandsIntoRBT(Card[] cards, HandsRBT thisRBT)
     {
-        // Populate all valid hands into the RBT
+        // Identical permutation logic, but inserting into the RBT instead
+        if(cards.length < 5) {
+            return; 
+        }
+        
+        for (int i = 0; i < cards.length - 4; i++) {
+            for (int j = i + 1; j < cards.length - 3; j++) {
+                for (int k = j + 1; k < cards.length - 2; k++) {
+                    for (int l = k + 1; l < cards.length - 1; l++) {
+                        for (int m = l + 1; m < cards.length; m++) {
+                            
+                            Hands tempHand = new Hands(cards[i], cards[j], cards[k], cards[l], cards[m]); 
+                            
+                            if(tempHand.isAValidHand()) {
+                                thisRBT.insert(tempHand);  // Insert into the passed RBT
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static void sortCards(Card[] cards)
