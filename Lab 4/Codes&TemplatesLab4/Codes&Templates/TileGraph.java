@@ -130,14 +130,16 @@ public class TileGraph {
 
     // Helper method to find the next intersection by traveling along a road
     // Helper method to find the next intersection by traveling along a road
+    // Helper method to find the next intersection by traveling along a road
     private Tile scanForIntersection(Tile[][] map, int startX, int startY, int dx, int dy) {
         int x = startX + dx;
         int y = startY + dy;
         
-        // Keep moving in the (dx, dy) direction safely WITHIN the map boundaries
-        while (x >= 0 && x < map.length && y >= 0 && y < map[0].length) {
+        // map.length is the number of ROWS (Y limit). map[0].length is the number of COLS (X limit).
+        while (y >= 0 && y < map.length && x >= 0 && x < map[0].length) {
             
-            char type = map[x][y].getTileType();
+            // 2D Arrays are mapped as map[row][col], which translates to map[y][x]!
+            char type = map[y][x].getTileType();
             
             // Stop searching if we hit a wall ('#')
             if (type == '#') {
@@ -146,7 +148,7 @@ public class TileGraph {
             
             // If we hit an Intersection (I), Start (S), or Destination (D), return that Tile
             if (type == 'I' || type == 'S' || type == 'D') {
-                return map[x][y];
+                return map[y][x];
             }
             
             // Move to the next tile
